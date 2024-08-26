@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINKS DE APOYO</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Fondo oscuro */
+            color: #e0e0e0; /* Texto claro */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+        }
+        h1 {
+            color: #4CAF50; /* Color del título en verde */
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50; /* Fondo del botón */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 5px; /* Espacio entre botones */
+        }
+        button:hover {
+            background-color: #45a049; /* Fondo del botón al pasar el ratón */
+        }
+        .back-button {
+            background-color: #333; /* Fondo del botón de atrás */
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #555; /* Fondo del botón de atrás al pasar el ratón */
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-button">Atrás</a> <!-- Botón de atrás -->
+
+    <h1>Extraer Links</h1>
+    <button id="extract-btn">DESCARGAR LINKS ACTUALES</button>
+
+    <script>
+        document.getElementById("extract-btn").addEventListener("click", function() {
+            // Crear un enlace temporal para la descarga
+            const link = document.createElement('a');
+            link.href = '/extraer-links/';  // La URL que dispara la vista
+            link.download = 'links_extraidos.txt';  // Nombre predeterminado del archivo
+            document.body.appendChild(link);  // Añadir el enlace al DOM
+            link.click();  // Forzar el clic para iniciar la descarga
+            document.body.removeChild(link);  // Remover el enlace después de la descarga
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+{% load i18n %}
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <input type="search" id="nav-filter" placeholder="{% translate 'Start typing to filter…' %}" aria-label="{% translate 'Filter navigation items' %}">
+
+  <style>
+    /* Estilo del enlace activo */
+    a.section.active {
+      font-weight: bold; /* Hacer el texto en negrita */
+      color: #7eb3ce; /* Cambiar el color del texto */
+    }
+
+    a.section.active::after {
+      content: " X"; /* Agregar una "X" después del texto del enlace */
+      color: #417690; /* Cambiar el color de la "X" */
+    }
+
+    /* Estilo de los enlaces */
+    a.section {
+      font-size: 1.25em; /* Ajusta el tamaño de la fuente */
+      text-decoration: none; /* Opcional: eliminar el subrayado del enlace */
+    }
+
+    /* Estilo del menú lateral */
+    #nav-sidebar {
+      width: 250px; /* Ajusta el ancho del menú lateral */
+      font-size: 1em; /* Ajusta el tamaño de la fuente dentro del menú */
+    }
+
+    .app-links table {
+      width: 100%; /* Hacer que la tabla ocupe todo el ancho del contenedor */
+    }
+
+    .app-links th {
+      padding: 10px; /* Agregar espaciado en las celdas de la tabla */
+    }
+
+    /* Estilo para el modal */
+    .modal {
+      display: none; /* Oculto por defecto */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #1e1e1e; /* Fondo del contenido modal */
+      border-radius: 8px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      color: #e0e0e0;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .modal-header h1 {
+      margin: 0;
+      color: #4CAF50; /* Color del título en verde */
+    }
+
+    .modal-header .close-btn {
+      background-color: #333; /* Fondo del botón de cerrar */
+      color: #e0e0e0;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-header .close-btn:hover {
+      background-color: #555; /* Fondo del botón de cerrar al pasar el ratón */
+    }
+
+    .modal-content button {
+      background-color: #4CAF50; /* Fondo del botón */
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin: 5px; /* Espacio entre botones */
+    }
+
+    .modal-content button:hover {
+      background-color: #45a049; /* Fondo del botón al pasar el ratón */
+    }
+  </style>
+
+  <div class="app-links module">
+    <table>
+      <caption>LINKS AGREGADOS</caption>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Samplicious" class="section active" title="Samplicious Links">Samplicious</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Spectrum" class="section active" title="Spectrum Links">Spectrum</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Cint" class="section active" title="Cint Links">Cint</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Progede" class="section active" title="Progede Links">Progede</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Invite" class="section active" title="Invite Links">Invite</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="/admin/links/link/?tipo__exact=Internos" class="section active" title="Internos Links">Internos</a></th>
+      </tr>
+      <tr>
+        <th scope="row"><a href="#" id="open-modal-btn" class="section  active" title="Extraer Links">EXTRAER LINKS</a></th>
+      </tr>
+      {% if user.username == 'admin' %}
+      <tr>
+        <th scope="row"><a href="/backup/" class="section active" title="Solo Owner">SOLO OWNER</a></th>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+</nav>
+
+<!-- Modal -->
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1>Extraer Links</h1>
+      <button class="close-btn" id="close-modal-btn">Cerrar</button>
+    </div>
+    <button id="extract-btn">DESCARGAR LINKS ACTUALES</button>
+  </div>
+</div>
+
+<script>
+  // Obtener elementos del DOM
+  const modal = document.getElementById('myModal');
+  const openModalBtn = document.getElementById('open-modal-btn');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const extractBtn = document.getElementById('extract-btn');
+
+  // Función para abrir el modal
+  openModalBtn.addEventListener('click', function(event) {
+    event.preventDefault(); // Evitar que el enlace siga su comportamiento por defecto
+    modal.style.display = 'flex'; // Mostrar el modal
+  });
+
+  // Función para cerrar el modal
+  closeModalBtn.addEventListener('click', function() {
+    modal.style.display = 'none'; // Ocultar el modal
+  });
+
+  // Función para descargar los links
+  extractBtn.addEventListener('click', function() {
+    // Crear un enlace temporal para la descarga
+    const link = document.createElement('a');
+    link.href = '/extraer-links/';  // La URL que dispara la vista
+    link.download = 'links_extraidos.txt';  // Nombre predeterminado del archivo
+    document.body.appendChild(link);  // Añadir el enlace al DOM
+    link.click();  // Forzar el clic para iniciar la descarga
+    document.body.removeChild(link);  // Remover el enlace después de la descarga
+  });
+</script>

@@ -1,0 +1,296 @@
+{% extends "admin/base.html" %}
+
+{% block title %}UnevennesS{% endblock %}
+
+{% block branding %}
+
+{% load static %}
+
+<style>
+  .logoweb {
+    width: auto;
+    height: 60px;
+    object-fit: contain;
+    margin: 5px;
+    display: inline-block;
+  }
+
+  @media (min-width: 768px) {
+    .logoweb {
+      height: 100px;
+    }
+  }
+
+  #timer-container {
+    margin-top: 20px;
+    font-size: 20px;
+    text-align: center;
+    margin-top: -5px;
+    margin-inline: 25px;
+  }
+
+  #alarm-message {
+    display: none;
+    color: #dc3545;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+
+  button {
+    padding: 8px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    background-color: #007bff;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin: 3px;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 767px) {
+    #timer-container {
+      display: none;
+    }
+  }
+
+  .letter-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #222;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 350px;
+    color: #eee;
+  }
+
+  .letter-popup.show {
+    display: block;
+  }
+
+  .letter-input {
+    width: calc(100% - 150px);
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin: 5px 0;
+    color: #eee;
+    background-color: #333;
+    font-size: 16px;
+  }
+
+  .letter-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 5px;
+    font-size: 16px;
+    float: right;
+    margin-top: -2px;
+  }
+
+  .letter-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #eee;
+    font-size: 25px;
+  }
+
+  .letter-example {
+    font-style: italic;
+    margin-bottom: 5px;
+    color: #eee;
+  }
+
+  #letter-result {
+    margin-top: 10px;
+  }
+
+</style>
+
+<div class="letter-popup" id="letter-popup">
+  <span class="letter-close" onclick="closeLetterPopup()">×</span>
+  <h3>Ingresa letras</h3>
+  <input type="text" class="letter-input" id="letter-input" placeholder="(Ejemplo: sdfusd)" maxlength="6">
+  <button class="letter-button" onclick="sortLetters()">Ordenar</button>
+  <p id="letter-result">Orden: </p>
+</div>
+<img class="logoweb" src="/static/img/imgg.png" alt="Logo" onclick="showLetterPopup()">
+<img class="logoweb" src="/static/img/img1.png" alt="Logo" onclick="showLetterPopup()">
+<img class="logoweb" src="/static/img/img3.png" alt="Logo" onclick="showLetterPopup()">
+
+<div id="timer-container">
+  <p id="timer">Timer: 00:00</p>
+  <div>
+    <button id="timer-5-btn" onclick="setTimer(5, 'timer-5-btn')">5 Mn</button>
+    <button id="timer-10-btn" onclick="setTimer(10, 'timer-10-btn')">10 Mn</button>
+    <button id="timer-15-btn" onclick="setTimer(15, 'timer-15-btn')">15 Mn</button>
+    <button id="reset-btnr" onclick="resetTimer()">Detener</button>
+  </div>
+
+
+  <p id="alarm-message">Listo!</p>
+</div>
+
+<audio id="alarm-sound" src="{% static 'alarm.mp3' %}" preload="auto"></audio>
+
+<script>
+  let timer;
+  let totalSeconds = 0;
+  const timerElement = document.getElementById('timer');
+  const alarmMessage = document.getElementById('alarm-message');
+  const alarmSound = document.getElementById('alarm-sound');
+
+  function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
+  function updateTimer() {
+    if (totalSeconds <= 0) {
+      clearInterval(timer);
+      timer = null;
+      alarmMessage.style.display = 'block';
+      alarmSound.play().catch(error => {
+        console.error('Error playing the alarm sound:', error);
+      });
+      document.getElementById('timer-5-btn').disabled = false;
+      document.getElementById('timer-10-btn').disabled = false;
+      document.getElementById('timer-15-btn').disabled = false;
+      document.getElementById('reset-btn').disabled = false;
+      return;
+    }
+    totalSeconds--;
+    timerElement.textContent = `Timer: ${formatTime(totalSeconds)}`;
+    localStorage.setItem('totalSeconds', totalSeconds);
+  }
+
+  function startTimer() {
+    if (!timer) {
+      timer = setInterval(updateTimer, 1000);
+      alarmMessage.style.display = 'none';
+      timerElement.textContent = `Timer: ${formatTime(totalSeconds)}`;
+      localStorage.setItem('totalSeconds', totalSeconds);
+      document.getElementById('timer-5-btn').disabled = true;
+      document.getElementById('timer-10-btn').disabled = true;
+      document.getElementById('timer-15-btn').disabled = true;
+      document.getElementById('reset-btn').disabled = true;
+    }
+  }
+
+  function stopTimer() {
+    clearInterval(timer);
+    timer = null;
+    localStorage.removeItem('totalSeconds');
+    document.getElementById('timer-5-btn').disabled = false;
+    document.getElementById('timer-10-btn').disabled = false;
+    document.getElementById('timer-15-btn').disabled = false;
+    document.getElementById('reset-btn').disabled = false;
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = null;
+    totalSeconds = 0;
+    timerElement.textContent = `Timer: 00:00`;
+    alarmMessage.style.display = 'none';
+    localStorage.removeItem('totalSeconds');
+    document.getElementById('timer-5-btn').disabled = false;
+    document.getElementById('timer-10-btn').disabled = false;
+    document.getElementById('timer-15-btn').disabled = false;
+    document.getElementById('reset-btn').disabled = false;
+  }
+
+  function restoreTimer() {
+    const savedSeconds = parseInt(localStorage.getItem('totalSeconds'), 10);
+    if (!isNaN(savedSeconds) && savedSeconds > 0) {
+      totalSeconds = savedSeconds;
+      timerElement.textContent = `Timer: ${formatTime(totalSeconds)}`;
+      timer = setInterval(updateTimer, 1000);
+      document.getElementById('timer-5-btn').disabled = true;
+      document.getElementById('timer-10-btn').disabled = true;
+      document.getElementById('timer-15-btn').disabled = true;
+      document.getElementById('reset-btn').disabled = true;
+    }
+  }
+
+  window.onload = restoreTimer;
+
+  function setTimer(minutes, buttonId) {
+    totalSeconds = minutes * 60;
+    timerElement.textContent = `Timer: ${formatTime(totalSeconds)}`;
+    startTimer();
+    document.getElementById(buttonId).disabled = true; // Deshabilitar el botón que se presionó
+  }
+
+  function showLetterPopup() {
+    document.getElementById('letter-popup').classList.add('show');
+  }
+
+  function closeLetterPopup() {
+    document.getElementById('letter-popup').classList.remove('show');
+  }
+
+  function sortLetters() {
+    const lettersInput = document.getElementById('letter-input');
+    const letters = lettersInput.value.trim();
+
+    if (letters.length > 6) {
+      alert("Ingresa un máximo de 6 letras.");
+      return;
+    }
+
+    if (!/^[a-zA-Z]+$/.test(letters)) {
+      alert("Ingresa solo letras.");
+      return;
+    }
+
+    // Remove duplicate letters
+    let uniqueLetters = [...new Set(letters.split(""))].sort();
+
+    let formattedLetters = ""; // Initialize an empty string
+
+    // Iterate through the sorted letters and format them
+    for (let i = 0; i < uniqueLetters.length; i++) {
+      formattedLetters += `${uniqueLetters[i].toUpperCase()} `; // Add the letter with a space, uppercase
+    }
+
+    const resultElement = document.getElementById('letter-result');
+    resultElement.textContent = `Orden: ${formattedLetters.trim()}`; // Trim any trailing space
+  }
+
+  document.getElementById('letter-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      sortLetters();
+    }
+  });
+</script>
+
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

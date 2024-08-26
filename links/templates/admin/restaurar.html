@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subir Backup</title>
+</head>
+<body>
+    <h1>Subir Backup</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="backup_file" />
+        <button type="submit">Subir Backup</button>
+    </form>
+</body>
+</html>

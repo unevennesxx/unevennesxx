@@ -1,0 +1,166 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <style>
+    /* Estilos para hacer la tabla responsiva */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+
+    /* Ajustes para mejorar la visualización en móviles */
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .hide-on-mobile {
+        display: none;
+      }
+      .status-cell {
+        width: auto; /* Ajustar el ancho del apartado de estado en móviles */
+      }
+    }
+
+    /* Estilos para los puntos de estado */
+    .status-cell {
+      width: 80px; /* Ajustar el ancho del apartado de estado en pantallas grandes */
+      position: relative;
+      text-align: center;
+    }
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+    }
+    .active-recently {
+      background-color: green;
+    }
+    .active-moderate {
+      background-color: yellow;
+    }
+    .active-long {
+      background-color: red;
+    }
+
+    /* Estilos para el tooltip */
+    .tooltip {
+      display: none;
+      position: absolute;
+      background-color: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      z-index: 1000;
+      white-space: nowrap;
+      top: 20px; /* Ajustar la posición del tooltip */
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .status-cell:hover .tooltip {
+      display: block;
+    }
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+    }
+  </style>
+
+  <h1>Usuarios Activos</h1>
+
+  <!-- Botón de Atrás -->
+  <a href="{% url 'admin:index' %}" class="btn btn-secondary">Atrás</a>
+  <br><br>
+
+  <div class="container">
+    <table id="users-table">
+      <thead>
+        <tr>
+          <th>Nombre de Usuario</th>
+          <th class="hide-on-mobile">Correo Electrónico</th>
+          <th>Último Inicio de Sesión</th>
+          <th class="hide-on-mobile">Último Cierre de Sesión</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          <tr data-last-login="{{ user.last_login_timestamp }}">
+            <td>{{ user.username }}</td>
+            <td class="hide-on-mobile">{{ user.email }}</td>
+            <td>{{ user.last_login }}</td>
+            <td class="hide-on-mobile">{{ user.last_logout }}</td>
+            <td class="status-cell">
+              <span class="status-indicator"></span>
+              <div class="tooltip">Estado</div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">No hay usuarios activos.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Último Enlace Agregado</h2>
+  {% if latest_link %}
+    <p><strong>Título:</strong> {{ latest_link.nombre }}</p>
+    <p><strong>URL:</strong> <a href="{{ latest_link.url }}" target="_blank">{{ latest_link.url }}</a></p>
+    <p><strong>Fecha de Adición:</strong> {{ latest_link.fecha_de_agregado }}</p>
+    <p><strong>Tiempo Desde la Adición:</strong> {{ time_since_last_link }}</p>
+  {% else %}
+    <p>Aún no se ha agregado ningún enlace.</p>
+  {% endif %}
+
+  <h2>Estadísticas de Enlaces</h2>
+  <p><strong>Enlaces agregados hoy:</strong> {{ links_today }}</p>
+  <p><strong>Enlaces agregados este mes:</strong> {{ links_this_month }}</p>
+  <p><strong>Enlaces agregados este año:</strong> {{ links_this_year }}</p>
+
+  <script>
+    function updateActiveTimes() {
+      const rows = document.querySelectorAll('#users-table tbody tr');
+      rows.forEach(row => {
+        const lastLoginTimestamp = row.getAttribute('data-last-login');
+        const lastLogin = new Date(parseInt(lastLoginTimestamp) * 1000);
+        const now = new Date();
+        const activeTime = Math.floor((now - lastLogin) / 1000); // tiempo en segundos
+
+        // Determinar el estado basado en el tiempo de inactividad
+        const statusIndicator = row.querySelector('.status-indicator');
+        if (activeTime <= 1200) { // 20 minutos
+          statusIndicator.className = 'status-indicator active-recently';
+        } else if (activeTime <= 1800) { // 30 minutos
+          statusIndicator.className = 'status-indicator active-moderate';
+        } else {
+          statusIndicator.className = 'status-indicator active-long';
+        }
+      });
+    }
+
+    // Inicializar el estado en la carga de la página
+    updateActiveTimes();
+  </script>
+{% endblock %}

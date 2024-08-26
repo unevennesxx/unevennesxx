@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respaldo y Restauración</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Fondo oscuro */
+            color: #e0e0e0; /* Texto claro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: #1e1e1e; /* Fondo del contenedor oscuro */
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50; /* Color de título en verde */
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #b0bec5; /* Color de subtítulos más suave */
+            margin: 20px 0 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        form {
+            margin: 0;
+            padding: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #333; /* Fondo de inputs y select */
+            color: #e0e0e0; /* Texto claro en inputs y select */
+            box-sizing: border-box;
+        }
+        .form-group select {
+            margin-bottom: 15px; /* Separación entre el selector y el botón */
+        }
+        .form-group button {
+            background-color: #4CAF50; /* Fondo del botón */
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .form-group button:hover {
+            background-color: #45a049; /* Fondo del botón al pasar el ratón */
+        }
+        .feedback {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none; /* Hide by default */
+        }
+        .feedback.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .feedback.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .back-button {
+            background-color: #333; /* Fondo del botón de atrás */
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #555; /* Fondo del botón de atrás al pasar el ratón */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-button">Atrás</a> <!-- Botón de atrás -->
+
+        <h1>Respaldo y Restauración</h1>
+
+        <!-- Mensajes de Feedback -->
+        {% if messages %}
+            <div class="feedback {% if messages.tags == 'success' %}success{% else %}error{% endif %}">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Formulario de búsqueda -->
+        <form method="get">
+            <div class="form-group">
+                {{ form.as_p }}
+                <button type="submit">Buscar</button>
+            </div>
+        </form>
+
+        <!-- Crear Backup -->
+        {% if user.username == 'admin' %}
+            <h2>Copia de Seguridad</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <button type="submit" name="backup">Crear Backup</button>
+                </div>
+            </form>
+        {% endif %}
+
+        <!-- Restaurar Backup -->
+        {% if user.username == 'admin' %}
+            <h2>Restaurar Backup</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="filename">Seleccionar Backup:</label>
+                    <select name="filename" id="filename">
+                        {% for backup in backups %}
+                            <option value="{{ backup.name }}">{{ backup.name }} ({{ backup.date }} {{ backup.time }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" name="restore">Restaurar Backup</button>
+                </div>
+            </form>
+        {% endif %}
+
+        <!-- Subir Backup -->
+        {% if user.username == 'admin' %}
+            <h2>Subir Backup</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="backup_file">Seleccionar archivo de backup:</label>
+                    <input type="file" name="backup_file" id="backup_file">
+                    <button type="submit">Subir Backup</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const feedback = document.querySelector('.feedback');
+            if (feedback) {
+                feedback.style.display = 'block'; // Show feedback
+                setTimeout(() => {
+                    feedback.style.opacity = '0';
+                    setTimeout(() => {
+                        feedback.remove();
+                    }, 500);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# railway.toml
+
+[service]
+name = "nombre-aplicacion"
+start = "gunicorn nombre_proyecto.wsgi --log-file -"
+
+[plugins.envs]
+DATABASE_URL = "postgresql://username:password@host:port/dbname"
